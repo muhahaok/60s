@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>⚡ 电力资讯 API - 交互式演示</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+          sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 32px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 14px;
+      }
+
+      .diagnostic-box {
+        background-color: #e8f4f8;
+        border-left: 4px solid #0084ff;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+
+      .diagnostic-title {
+        color: #0084ff;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .diagnostic-item {
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .status-ok {
+        background-color: #28a745;
+      }
+
+      .status-warning {
+        background-color: #ffc107;
+      }
+
+      .status-error {
+        background-color: #dc3545;
+      }
+
+      .button-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin-bottom: 30px;
+      }
+
+      button {
+        padding: 12px 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background-color: #667eea;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: #5568d3;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      .output-container {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+        max-height: 700px;
+        overflow-y: auto;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .output-header {
+        color: #667eea;
+        font-weight: 600;
+        margin-bottom: 12px;
+        font-size: 13px;
+      }
+
+      .response-section {
+        margin-bottom: 30px;
+      }
+
+      .response-title {
+        font-size: 13px;
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 10px;
+        padding: 8px 12px;
+        background-color: #e9ecef;
+        border-left: 3px solid #667eea;
+      }
+
+      .highlight {
+        background-color: #fff3cd;
+        padding: 2px 4px;
+        border-radius: 2px;
+      }
+
+      .error-text {
+        color: #dc3545;
+      }
+
+      .success-text {
+        color: #28a745;
+      }
+
+      .warning-text {
+        color: #ffc107;
+      }
+
+      .api-endpoint {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        font-family: monospace;
+        font-size: 12px;
+        color: #333;
+      }
+
+      .endpoint-label {
+        font-weight: 600;
+        color: #667eea;
+        display: block;
+        margin-bottom: 4px;
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .tips-box {
+        background-color: #d1ecf1;
+        border: 1px solid #bee5eb;
+        border-radius: 4px;
+        padding: 12px;
+        margin-bottom: 20px;
+        font-size: 13px;
+        color: #0c5460;
+      }
+
+      .tips-title {
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .tips-item {
+        margin-bottom: 4px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>⚡ 电力资讯 API</h1>
+      <p class="subtitle">交互式演示 | 实时数据诊断 | API 端点测试</p>
+
+      <!-- 诊断信息 -->
+      <div class="diagnostic-box">
+        <div class="diagnostic-title">📊 系统诊断</div>
+        <div class="diagnostic-item">
+          <span class="status-indicator status-ok"></span>
+          <span>✅ 数据源已加载 (17 条权威资讯)</span>
+        </div>
+        <div class="diagnostic-item">
+          <span class="status-indicator" id="serverStatus" class="status-warning"></span>
+          <span id="serverStatusText">⏳ 检测服务器状态中...</span>
+        </div>
+        <div class="diagnostic-item">
+          <span class="status-indicator status-ok"></span>
+          <span>✅ 4 个 API 端点已配置</span>
+        </div>
+        <div class="diagnostic-item">
+          <span class="status-indicator status-ok"></span>
+          <span>✅ 3 种输出格式支持 (JSON、文本、Markdown)</span>
+        </div>
+      </div>
+
+      <!-- 提示框 -->
+      <div class="tips-box">
+        <div class="tips-title">💡 使用提示</div>
+        <div class="tips-item">
+          📌 如果显示"无法连接"，请确保 API 服务器正在运行: <code>npm run start</code>
+        </div>
+        <div class="tips-item">
+          📌 API 默认在 <code>http://localhost:4399</code> 上运行
+        </div>
+        <div class="tips-item">
+          📌 可以添加 <code>?encoding=text</code> 或 <code>?encoding=markdown</code> 获取其他格式
+        </div>
+      </div>
+
+      <!-- 可用 API 端点 -->
+      <h2 style="font-size: 18px; margin-bottom: 15px; color: #333">🔗 API 端点</h2>
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 12px;
+          margin-bottom: 30px;
+        "
+      >
+        <div class="api-endpoint">
+          <span class="endpoint-label">GET 今日日报</span>
+          /power/daily
+        </div>
+        <div class="api-endpoint">
+          <span class="endpoint-label">GET 资讯列表</span>
+          /power/news?category=energy&limit=10
+        </div>
+        <div class="api-endpoint">
+          <span class="endpoint-label">GET 健康检查</span>
+          /health
+        </div>
+        <div class="api-endpoint">
+          <span class="endpoint-label">GET API 信息</span>
+          /
+        </div>
+      </div>
+
+      <!-- 测试按钮 -->
+      <h2 style="font-size: 18px; margin-bottom: 15px; color: #333">🧪 快速测试</h2>
+      <div class="button-group">
+        <button class="btn-primary" onclick="testEndpoint('/power/daily', 'JSON 日报')">
+          📰 JSON 日报
+        </button>
+        <button class="btn-primary" onclick="testEndpoint('/power/daily?encoding=text', '文本日报')">
+          📝 文本日报
+        </button>
+        <button class="btn-primary" onclick="testEndpoint('/power/news?category=all&limit=5', '所有资讯')">
+          📚 所有资讯
+        </button>
+        <button class="btn-primary" onclick="testEndpoint('/power/news?category=energy', '能源资讯')">
+          ⚡ 能源资讯
+        </button>
+        <button class="btn-primary" onclick="testEndpoint('/power/news?category=policy', '政策资讯')">
+          📋 政策资讯
+        </button>
+        <button class="btn-primary" onclick="testEndpoint('/power/news?category=market', '市场资讯')">
+          📊 市场资讯
+        </button>
+        <button class="btn-primary" onclick="testEndpoint('/health', '健康检查')">
+          💚 健康检查
+        </button>
+        <button class="btn-primary" onclick="testEndpoint('/', 'API 信息')">
+          ℹ️ API 信息
+        </button>
+      </div>
+
+      <!-- 输出显示区 -->
+      <div class="output-container" id="output">
+        <div class="output-header">📡 响应结果将在此显示</div>
+        <p>点击上方按钮发送请求...</p>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE_URL = 'http://localhost:4399'
+
+      // 检查服务器状态
+      async function checkServerStatus() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/health`, {
+            method: 'GET',
+            mode: 'cors',
+            timeout: 3000,
+          })
+          if (response.ok) {
+            updateServerStatus(true)
+          } else {
+            updateServerStatus(false)
+          }
+        } catch (error) {
+          updateServerStatus(false)
+        }
+      }
+
+      function updateServerStatus(isOnline) {
+        const statusIndicator = document.getElementById('serverStatus')
+        const statusText = document.getElementById('serverStatusText')
+
+        if (isOnline) {
+          statusIndicator.className = 'status-indicator status-ok'
+          statusText.textContent = '✅ API 服务器正在运行'
+        } else {
+          statusIndicator.className = 'status-indicator status-error'
+          statusText.textContent = '❌ API 服务器离线 (请运行: npm run start)'
+        }
+      }
+
+      // 测试 API 端点
+      async function testEndpoint(endpoint, label) {
+        const output = document.getElementById('output')
+        const url = `${API_BASE_URL}${endpoint}`
+
+        // 显示加载状态
+        output.innerHTML = `<div class="output-header">⏳ ${label} - 正在加载...</div><p>请求地址: ${url}</p>`
+
+        try {
+          const startTime = Date.now()
+          const response = await fetch(url, {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+          const elapsed = Date.now() - startTime
+
+          let displayContent = `<div class="response-title">✅ ${label} (${response.status}) - ${elapsed}ms</div>`
+          displayContent += `<div style="margin-bottom: 15px; padding: 10px; background-color: #e8f5e9; border-radius: 4px; font-size: 12px;">`
+          displayContent += `<strong>请求:</strong> GET ${endpoint}<br>`
+          displayContent += `<strong>响应码:</strong> ${response.status} ${response.statusText}<br>`
+          displayContent += `<strong>响应时间:</strong> ${elapsed}ms`
+          displayContent += `</div>`
+
+          const contentType = response.headers.get('content-type') || 'unknown'
+          displayContent += `<div style="margin-bottom: 15px; padding: 10px; background-color: #fff3e0; border-radius: 4px; font-size: 12px;">`
+          displayContent += `<strong>响应类型:</strong> ${contentType}`
+          displayContent += `</div>`
+
+          if (contentType.includes('application/json')) {
+            const data = await response.json()
+            displayContent += `<div class="response-section"><pre>${JSON.stringify(data, null, 2)}</pre></div>`
+          } else {
+            const text = await response.text()
+            displayContent += `<div class="response-section"><pre>${escapeHtml(text)}</pre></div>`
+          }
+
+          output.innerHTML = displayContent
+        } catch (error) {
+          output.innerHTML = `
+            <div class="output-header">❌ ${label} - 连接失败</div>
+            <div style="padding: 15px; background-color: #ffebee; border-radius: 4px; margin-bottom: 15px;">
+              <strong style="color: #c62828;">错误信息:</strong><br>
+              ${escapeHtml(error.message)}
+            </div>
+            <div style="padding: 15px; background-color: #e3f2fd; border-radius: 4px;">
+              <strong style="color: #1565c0;">建议:</strong><br>
+              1. 检查 API 服务器是否正在运行<br>
+              2. 运行命令: <code>npm run start</code><br>
+              3. 确保服务器在 http://localhost:4399 上运行<br>
+              4. 检查网络连接
+            </div>
+          `
+        }
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div')
+        div.textContent = text
+        return div.innerHTML
+      }
+
+      // 页面加载时检查服务器
+      window.addEventListener('load', () => {
+        checkServerStatus()
+        // 每 5 秒检查一次
+        setInterval(checkServerStatus, 5000)
+      })
+    </script>
+  </body>
+</html>

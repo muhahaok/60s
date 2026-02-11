@@ -175,12 +175,28 @@ const powerDataSources = {
  * 获取今日电力日报
  */
 export async function fetchPowerDaily(): Promise<PowerDaily> {
-  const today = new Date().toISOString().split('T')[0]
+  try {
+    const today = new Date().toISOString().split('T')[0]
+    const allNews = [
+      ...powerDataSources.daily,
+      ...powerDataSources.energy_news,
+      ...powerDataSources.policy_news,
+      ...powerDataSources.market_news,
+    ]
 
-  return {
-    date: today,
-    title: `${today} 电力行业要闻`,
-    news: powerDataSources.daily,
+    return {
+      date: today,
+      title: `${today} 电力行业要闻`,
+      news: allNews.length > 0 ? allNews : powerDataSources.daily,
+    }
+  } catch (error) {
+    console.error('获取电力资讯失败:', error)
+    const today = new Date().toISOString().split('T')[0]
+    return {
+      date: today,
+      title: `${today} 电力行业要闻`,
+      news: powerDataSources.daily,
+    }
   }
 }
 
